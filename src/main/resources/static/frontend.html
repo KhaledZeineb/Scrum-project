@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book API</title>
+    <style>
+        /* Général */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fc;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            color: #4e73df;
+            text-align: center;
+        }
+
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        label {
+            font-size: 1rem;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            background-color: #f9f9f9;
+        }
+
+        button {
+            background-color: #4e73df;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #375a9b;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            font-size: 1rem;
+        }
+
+        th {
+            background-color: #4e73df;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .actions button {
+            background-color: #e74a3b;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .actions button:hover {
+            background-color: #c0392b;
+        }
+
+        .actions button + button {
+            background-color: #1cc88a;
+            margin-left: 10px;
+        }
+
+        .actions button + button:hover {
+            background-color: #17a673;
+        }
+    </style>
+
+</head>
+<body>
+
+<h1>Book List</h1>
+
+<div class="form-container">
+    <h2>Add a New Book</h2>
+    <form id="add-book-form">
+        <label for="isbn">ISBN:</label>
+        <input type="text" id="isbn" required><br><br>
+        <label for="title">Title:</label>
+        <input type="text" id="title" required><br><br>
+        <label for="author">Author:</label>
+        <input type="text" id="author" required><br><br>
+        <button type="submit">Add Book</button>
+    </form>
+</div>
+
+<table id="book-list">
+    <thead>
+    <tr>
+        <th>ISBN</th>
+        <th>Title</th>
+        <th>Author</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Dynamic content will be injected here -->
+    </tbody>
+</table>
+
+<script>
+    const apiUrl = 'http://localhost:8081/api/books'; // Adjust the URL if your backend runs on a different port
+    const bookListTable = document.getElementById("book-list").getElementsByTagName('tbody')[0];
+
+    // Fetch all books
+    async function fetchBooks() {
+        const response = await fetch(apiUrl);
+        const books = await response.json();
+        bookListTable.innerHTML = ''; // Clear the table before adding new rows
+        books.forEach(book => {
+            const row = bookListTable.insertRow();
+            row.insertCell(0).textContent = book.isbn;
+            row.insertCell(1).textContent = book.title;
+            row.insertCell(2).textContent = book.author;
+
+            const actionsCell = row.insertCell(3);
+            actionsCell.innerHTML = `<button onclick="deleteBook('${book.isbn}')">Delete</button> <button onclick="updateBook('${book.isbn}')">Update</button>`;
+        });
+    }
+
+    // Add a new book
+    document.getElementById('add-book-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const newBook = {
+            isbn: document.getElementById('isbn').value,
+            title: document.getElementById('title').value,
+            author: document.getElementById('author').value
+        };
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newBook)
+        });
+
+        if (response.ok) {
+            fetchBooks(); // Refresh the book list after adding a new book
+            document.getElementById('add-book-form').reset(); // Clear the form fields
+        }
+    });
+
+    // Delete a book
+    async function deleteBook(isbn) {
+        const response = await fetch(`${apiUrl}/${isbn}`, { method: 'DELETE' });
+        if (response.ok) {
+            fetchBooks(); // Refresh the book list after deletion
+        }
+    }
+
+    // Update a book (you can modify this to show a form to update the book details)
+    async function updateBook(isbn) {
+        const newTitle = prompt('Enter the new title:');
+        const newAuthor = prompt('Enter the new author:');
+
+        if (newTitle && newAuthor) {
+            const updatedBook = { title: newTitle, author: newAuthor };
+
+            const response = await fetch(`${apiUrl}/${isbn}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedBook)
+            });
+
+            if (response.ok) {
+                fetchBooks(); // Refresh the book list after update
+            }
+        }
+    }
+
+    // Initial fetch of books when the page loads
+    fetchBooks();
+</script>
+
+</body>
+</html>
