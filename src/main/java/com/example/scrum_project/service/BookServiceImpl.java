@@ -1,6 +1,5 @@
 package com.example.scrum_project.service;
 
-
 import com.example.scrum_project.model.Book;
 import com.example.scrum_project.repository.BookRepository;
 import org.springframework.beans.factory.annotation.Autowired;

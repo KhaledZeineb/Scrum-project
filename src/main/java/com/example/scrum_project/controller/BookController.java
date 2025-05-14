@@ -1,8 +1,10 @@
 package com.example.scrum_project.controller;
 
 import com.example.scrum_project.model.Book;
-import com.example.scrum_project.repository.BookRepository;
+import com.example.scrum_project.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 
@@ -15,42 +17,53 @@ import java.util.List;
 public class BookController {
 
     @Autowired
-    private BookRepository bookRepository;
+    private BookService bookService;
 
     @PostMapping
-    public Book createBook(@RequestBody Book book) {
-        return bookRepository.save(book);
+    public ResponseEntity<Book> createBook(@RequestBody Book book) {
+        Book createdBook = bookService.createBook(book);
+        return new ResponseEntity<>(createdBook, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public List<Book> getAllBooks() {
-        return bookRepository.findAll();
+    public ResponseEntity<List<Book>> getAllBooks() {
+        List<Book> books = bookService.getAllBooks();
+        return new ResponseEntity<>(books, HttpStatus.OK);
     }
 
     @GetMapping("/{isbn}")
-    public Book getBook(@PathVariable String isbn) {
-        return bookRepository.findById(isbn)
-                .orElseThrow(() -> new RuntimeException("Book not found with ISBN: " + isbn));
+    public ResponseEntity<Book> getBook(@PathVariable String isbn) {
+        try {
+            Book book = bookService.getBookByIsbn(isbn);
+            return new ResponseEntity<>(book, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @PutMapping("/{isbn}")
-    public Book updateBook(@PathVariable String isbn, @RequestBody Book bookDetails) {
-        Book book = bookRepository.findById(isbn)
-                .orElseThrow(() -> new RuntimeException("Book not found with ISBN: " + isbn));
-
-        book.setTitle(bookDetails.getTitle());
-        book.setAuthor(bookDetails.getAuthor());
-
-        return bookRepository.save(book);
+    public ResponseEntity<Book> updateBook(@PathVariable String isbn, @RequestBody Book bookDetails) {
+        try {
+            Book updatedBook = bookService.updateBook(isbn, bookDetails);
+            return new ResponseEntity<>(updatedBook, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @DeleteMapping("/{isbn}")
-    public void deleteBook(@PathVariable String isbn) {
-        Book book = bookRepository.findById(isbn)
-                .orElseThrow(() -> new RuntimeException("Book not found with ISBN: " + isbn));
-
-        bookRepository.delete(book);
+    public ResponseEntity<Void> deleteBook(@PathVariable String isbn) {
+        try {
+            bookService.deleteBook(isbn);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
 
+
 }
+
+}
+
