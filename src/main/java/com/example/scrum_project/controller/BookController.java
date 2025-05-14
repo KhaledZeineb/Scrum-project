@@ -4,11 +4,14 @@ import com.example.scrum_project.model.Book;
 import com.example.scrum_project.repository.BookRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/api/books")
+@CrossOrigin(origins = "*")
 public class BookController {
 
     @Autowired
@@ -48,4 +51,6 @@ public class BookController {
 
         bookRepository.delete(book);
     }
+
+
 }
